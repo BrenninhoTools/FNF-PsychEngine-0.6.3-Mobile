@@ -132,6 +132,7 @@
 	<haxelib name="flixel-addons" />
 	<haxelib name="hscript" />
 	<define name="hscriptPos" />
+	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.editors.spine.*', 'flixel.addons.nape.*', 'flixel.system.macros.*', 'flixel.addons.tile.FlxRayCastTilemap'])" />
 
 	<!--In case you want to use the ui package-->
 	<haxelib name="flixel-ui" />

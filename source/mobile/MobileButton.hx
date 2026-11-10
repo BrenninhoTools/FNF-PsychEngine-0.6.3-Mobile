@@ -21,7 +21,7 @@ class MobileButton extends FlxSprite
 
 		if (prefix != null)
 		{
-			frames = Paths.getSparrowAtlas('mobile/' + image);
+			frames = Paths.getSparrowAtlas('mobile/' + image, 'shared');
 			animation.addByPrefix('idle', prefix + '0000', 0, false);
 			animation.addByPrefix('press', prefix, 24, false);
 			animation.play('idle');
@@ -33,7 +33,7 @@ class MobileButton extends FlxSprite
 			pressAnim = true;
 		}
 		else
-			loadGraphic(Paths.image('mobile/' + image));
+			loadGraphic(Paths.image('mobile/' + image, 'shared'));
 
 		this.scale.set(scale, scale);
 		updateHitbox();

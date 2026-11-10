@@ -3417,6 +3417,60 @@ class HScript
 		#end
 		interp.variables.set('ShaderFilter', openfl.filters.ShaderFilter);
 		interp.variables.set('StringTools', StringTools);
+		interp.variables.set('Std', Std);
+		interp.variables.set('Math', Math);
+		interp.variables.set('Type', Type);
+		interp.variables.set('Reflect', Reflect);
+		interp.variables.set('Date', Date);
+		interp.variables.set('Json', haxe.Json);
+		#if sys
+		interp.variables.set('Sys', Sys);
+		interp.variables.set('File', sys.io.File);
+		interp.variables.set('FileSystem', sys.FileSystem);
+		#end
+		interp.variables.set('FlxBasic', flixel.FlxBasic);
+		interp.variables.set('FlxObject', flixel.FlxObject);
+		interp.variables.set('FlxText', flixel.text.FlxText);
+		interp.variables.set('FlxSound', flixel.sound.FlxSound);
+		interp.variables.set('FlxMath', flixel.math.FlxMath);
+		interp.variables.set('FlxAngle', flixel.math.FlxAngle);
+		interp.variables.set('FlxRect', flixel.math.FlxRect);
+		interp.variables.set('FlxTypedGroup', flixel.group.FlxGroup.FlxTypedGroup);
+		interp.variables.set('FlxSpriteGroup', flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup);
+		interp.variables.set('FlxTrail', flixel.addons.effects.FlxTrail);
+		interp.variables.set('FlxBackdrop', flixel.addons.display.FlxBackdrop);
+		interp.variables.set('FlxGraphic', flixel.graphics.FlxGraphic);
+		interp.variables.set('FlxAtlasFrames', flixel.graphics.frames.FlxAtlasFrames);
+		interp.variables.set('FlxFlicker', flixel.effects.FlxFlicker);
+		interp.variables.set('FlxColorHelper', ScriptColor);
+		interp.variables.set('Note', Note);
+		interp.variables.set('StrumNote', StrumNote);
+		interp.variables.set('NoteSplash', NoteSplash);
+		interp.variables.set('HealthIcon', HealthIcon);
+		interp.variables.set('BGSprite', BGSprite);
+		interp.variables.set('Boyfriend', Boyfriend);
+		interp.variables.set('CoolUtil', CoolUtil);
+		interp.variables.set('FunkinLua', FunkinLua);
+		interp.variables.set('MusicBeatState', MusicBeatState);
+		interp.variables.set('MusicBeatSubstate', MusicBeatSubstate);
+		interp.variables.set('Achievements', Achievements);
+		interp.variables.set('WeekData', WeekData);
+		interp.variables.set('Highscore', Highscore);
+		interp.variables.set('Song', Song);
+		interp.variables.set('ColorSwap', ColorSwap);
+		interp.variables.set('Controls', Controls);
+		interp.variables.set('controls', PlayerSettings.player1.controls);
+		interp.variables.set('callOnLuas', function(event:String, ?args:Array<Dynamic>)
+		{
+			if (PlayState.instance == null)
+				return null;
+			return PlayState.instance.callOnLuas(event, args != null ? args : []);
+		});
+		interp.variables.set('setOnLuas', function(variable:String, value:Dynamic)
+		{
+			if (PlayState.instance != null)
+				PlayState.instance.setOnLuas(variable, value);
+		});
 
 		interp.variables.set('setVar', function(name:String, value:Dynamic)
 		{
@@ -3444,7 +3498,49 @@ class HScript
 		@:privateAccess
 		HScript.parser.line = 1;
 		HScript.parser.allowTypes = true;
+		HScript.parser.allowJSON = true;
+		HScript.parser.allowMetadata = true;
+		interp.variables.set('game', PlayState.instance);
 		return interp.execute(HScript.parser.parseString(codeToRun));
 	}
+}
+#end
+
+#if hscript
+class ScriptColor
+{
+	public static var TRANSPARENT(default, null):Int = FlxColor.TRANSPARENT;
+	public static var BLACK(default, null):Int = FlxColor.BLACK;
+	public static var WHITE(default, null):Int = FlxColor.WHITE;
+	public static var GRAY(default, null):Int = FlxColor.GRAY;
+	public static var RED(default, null):Int = FlxColor.RED;
+	public static var GREEN(default, null):Int = FlxColor.GREEN;
+	public static var BLUE(default, null):Int = FlxColor.BLUE;
+	public static var YELLOW(default, null):Int = FlxColor.YELLOW;
+	public static var ORANGE(default, null):Int = FlxColor.ORANGE;
+	public static var CYAN(default, null):Int = FlxColor.CYAN;
+	public static var MAGENTA(default, null):Int = FlxColor.MAGENTA;
+	public static var PURPLE(default, null):Int = FlxColor.PURPLE;
+	public static var PINK(default, null):Int = FlxColor.PINK;
+	public static var BROWN(default, null):Int = FlxColor.BROWN;
+	public static var LIME(default, null):Int = FlxColor.LIME;
+
+	public static function fromRGB(red:Int, green:Int, blue:Int, alpha:Int = 255):Int
+		return FlxColor.fromRGB(red, green, blue, alpha);
+
+	public static function fromRGBFloat(red:Float, green:Float, blue:Float, alpha:Float = 1):Int
+		return FlxColor.fromRGBFloat(red, green, blue, alpha);
+
+	public static function fromHSB(hue:Float, saturation:Float, brightness:Float, alpha:Float = 1):Int
+		return FlxColor.fromHSB(hue, saturation, brightness, alpha);
+
+	public static function fromString(str:String):Int
+		return FlxColor.fromString(str);
+
+	public static function fromInt(value:Int):Int
+		return FlxColor.fromInt(value);
+
+	public static function interpolate(color1:Int, color2:Int, factor:Float = 0.5):Int
+		return FlxColor.interpolate(color1, color2, factor);
 }
 #end
