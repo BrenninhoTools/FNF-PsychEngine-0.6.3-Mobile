@@ -120,9 +120,19 @@ class OptionsState extends MusicBeatState
 		super.update(elapsed);
 
 		#if mobile
-		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpOptions.members, curSelected);
+		var scrollSteps:Int = mobile.TouchUtil.scroll();
+		if (scrollSteps != 0)
+			changeSelection(scrollSteps);
+
+		var tappedOption:Int = mobile.TouchUtil.tappedIndex(grpOptions.members);
 		if (tappedOption > -1)
-			changeSelection(tappedOption - curSelected);
+		{
+			if (tappedOption != curSelected)
+				changeSelection(tappedOption - curSelected);
+			openSelectedSubstate(options[curSelected]);
+		}
+		else if (mobile.TouchUtil.justTapped())
+			mobile.TouchUtil.consume();
 		#end
 
 		if (controls.UI_UP_P) {

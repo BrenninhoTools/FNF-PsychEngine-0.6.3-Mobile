@@ -151,6 +151,10 @@ class PauseSubState extends MusicBeatSubstate
 		updateSkipTextStuff();
 
 		#if mobile
+		var scrollSteps:Int = mobile.TouchUtil.scroll();
+		if (scrollSteps != 0)
+			changeSelection(scrollSteps);
+
 		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpMenuShit.members, curSelected, cameras[0]);
 		if (tappedOption > -1)
 			changeSelection(tappedOption - curSelected);

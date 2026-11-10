@@ -264,6 +264,14 @@ class FreeplayState extends MusicBeatState
 		positionHighscore();
 
 		#if mobile
+		var scrollSteps:Int = mobile.TouchUtil.scroll();
+		if (scrollSteps != 0 && songs.length > 1)
+		{
+			changeSelection(scrollSteps);
+			changeDiff();
+			holdTime = 0;
+		}
+
 		var tappedSong:Int = mobile.TouchUtil.checkListTap(grpSongs.members, curSelected);
 		if (tappedSong > -1)
 		{

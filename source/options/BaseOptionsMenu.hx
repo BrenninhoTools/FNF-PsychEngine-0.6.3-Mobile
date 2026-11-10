@@ -136,12 +136,42 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	override function update(elapsed:Float)
 	{
 		#if mobile
-		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpOptions.members, curSelected);
-		if (tappedOption > -1)
+		var scrollSteps:Int = mobile.TouchUtil.scroll();
+		if (scrollSteps != 0)
 		{
-			changeSelection(tappedOption - curSelected);
+			changeSelection(scrollSteps);
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
+
+		var tappedOption:Int = mobile.TouchUtil.tappedIndex(grpOptions.members);
+		if (tappedOption < 0)
+		{
+			var tappedCheckbox:Int = mobile.TouchUtil.tappedIndex(checkboxGroup.members);
+			if (tappedCheckbox > -1)
+				tappedOption = checkboxGroup.members[tappedCheckbox].ID;
+		}
+		if (tappedOption < 0)
+		{
+			var tappedText:Int = mobile.TouchUtil.tappedIndex(grpTexts.members);
+			if (tappedText > -1)
+				tappedOption = grpTexts.members[tappedText].ID;
+		}
+
+		if (tappedOption > -1)
+		{
+			if (tappedOption != curSelected)
+				changeSelection(tappedOption - curSelected);
+
+			if (curOption.type == 'bool' && nextAccept <= 0)
+			{
+				curOption.setValue((curOption.getValue() == true) ? false : true);
+				curOption.change();
+				reloadCheckboxes();
+			}
+			FlxG.sound.play(Paths.sound('scrollMenu'));
+		}
+		else if (mobile.TouchUtil.justTapped())
+			mobile.TouchUtil.consume();
 		#end
 
 		if (controls.UI_UP_P)

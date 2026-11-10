@@ -195,6 +195,13 @@ class MainMenuState extends MusicBeatState
 		if (!selectedSomethin)
 		{
 			#if mobile
+			var scrollSteps:Int = mobile.TouchUtil.scroll();
+			if (scrollSteps != 0)
+			{
+				FlxG.sound.play(Paths.sound('scrollMenu'));
+				changeItem(scrollSteps);
+			}
+
 			var tappedItem:Int = mobile.TouchUtil.checkListTap(menuItems.members, curSelected);
 			if (tappedItem > -1)
 			{
