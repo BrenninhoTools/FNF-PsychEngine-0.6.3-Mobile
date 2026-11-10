@@ -193,8 +193,15 @@ jobs:
       - name: Prepare Files
         run: |
           mkdir -p release
-          cp artifacts/androidBuild/*.apk "release/PsychEngine063-${{ inputs.version }}-Android.apk"
-          cp artifacts/iOSBuild/PsychEngine063.ipa "release/PsychEngine063-${{ inputs.version }}-iOS.ipa"
+          find artifacts -type f | sed 's/^/  /'
+          APK="$(find artifacts -type f -name '*.apk' | head -n 1)"
+          IPA="$(find artifacts -type f -name '*.ipa' | head -n 1)"
+          if [ -z "$APK" ] || [ -z "$IPA" ]; then
+            echo "Missing build files"
+            exit 1
+          fi
+          cp "$APK" "release/PsychEngine063-${{ inputs.version }}-Android.apk"
+          cp "$IPA" "release/PsychEngine063-${{ inputs.version }}-iOS.ipa"
           if [ -f "documents/release/${{ inputs.version }}.md" ]; then
             cp "documents/release/${{ inputs.version }}.md" release-notes.md
           else
