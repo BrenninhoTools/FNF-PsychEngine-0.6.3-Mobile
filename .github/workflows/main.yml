@@ -106,15 +106,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Neko
+      - name: Setup Haxe
         run: |
           brew install neko
-          ls -l "$(brew --prefix)/lib/libneko.2.dylib"
-
-      - name: Setup Haxe
-        uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: ${{ env.HAXE_VERSION }}
+          curl -sSfL -o "$RUNNER_TEMP/haxe.tar.gz" "https://github.com/HaxeFoundation/haxe/releases/download/$HAXE_VERSION/haxe-$HAXE_VERSION-osx.tar.gz"
+          mkdir -p "$HOME/haxe"
+          tar xzf "$RUNNER_TEMP/haxe.tar.gz" -C "$HOME/haxe" --strip-components=1
+          echo "$HOME/haxe" >> "$GITHUB_PATH"
+          echo "HAXE_STD_PATH=$HOME/haxe/std" >> "$GITHUB_ENV"
+          "$HOME/haxe/haxe" --version
+          "$HOME/haxe/haxelib" version
 
       - name: Restore Haxelibs
         id: cache-haxelib
