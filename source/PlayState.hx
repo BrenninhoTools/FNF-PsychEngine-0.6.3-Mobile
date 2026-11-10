@@ -4732,6 +4732,16 @@ class PlayState extends MusicBeatState
 		{
 			if(cpuControlled && (note.ignoreNote || note.hitCausesMiss)) return;
 
+			#if mobile
+			if (!cpuControlled && !note.hitCausesMiss)
+			{
+				if (note.isSustainNote)
+					mobile.Haptics.sustain();
+				else
+					mobile.Haptics.note();
+			}
+			#end
+
 			if (ClientPrefs.hitsoundVolume > 0 && !note.hitsoundDisabled)
 			{
 				FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.hitsoundVolume);

@@ -37,6 +37,8 @@ class ClientPrefs {
 	public static var invisiblePauseButton:Bool = false;
 	public static var chartEditorInPause:Bool = false;
 	public static var storageType:String = 'Data';
+	public static var haptics:Bool = true;
+	public static var hapticsIntensity:Float = 1;
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
 		'scrolltype' => 'multiplicative', 
@@ -137,6 +139,8 @@ class ClientPrefs {
 		FlxG.save.data.invisibleHitbox = invisibleHitbox;
 		FlxG.save.data.invisiblePauseButton = invisiblePauseButton;
 		FlxG.save.data.chartEditorInPause = chartEditorInPause;
+		FlxG.save.data.haptics = haptics;
+		FlxG.save.data.hapticsIntensity = hapticsIntensity;
 	
 		FlxG.save.flush();
 
@@ -156,6 +160,12 @@ class ClientPrefs {
 		}
 		if(FlxG.save.data.chartEditorInPause != null) {
 			chartEditorInPause = FlxG.save.data.chartEditorInPause;
+		}
+		if(FlxG.save.data.haptics != null) {
+			haptics = FlxG.save.data.haptics;
+		}
+		if(FlxG.save.data.hapticsIntensity != null) {
+			hapticsIntensity = FlxG.save.data.hapticsIntensity;
 		}
 		storageType = mobile.StorageUtil.getStorageType();
 		if(FlxG.save.data.downScroll != null) {

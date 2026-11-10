@@ -28,6 +28,27 @@ class MobileOptionsSubState extends BaseOptionsMenu
 			false);
 		addOption(option);
 
+		var option:Option = new Option('Haptics',
+			'If checked, the device will vibrate\nin the menus and when hitting notes.',
+			'haptics',
+			'bool',
+			true);
+		option.onChange = onChangeHaptics;
+		addOption(option);
+
+		var option:Option = new Option('Haptics Intensity',
+			'How strong the vibration is.',
+			'hapticsIntensity',
+			'float',
+			1);
+		option.scrollSpeed = 1;
+		option.minValue = 0.0;
+		option.maxValue = 5.0;
+		option.changeValue = 0.1;
+		option.decimals = 1;
+		option.onChange = onChangeHaptics;
+		addOption(option);
+
 		#if android
 		ClientPrefs.storageType = mobile.StorageUtil.getStorageType();
 		var option:Option = new Option('Storage Type',
@@ -41,6 +62,11 @@ class MobileOptionsSubState extends BaseOptionsMenu
 		#end
 
 		super();
+	}
+
+	function onChangeHaptics()
+	{
+		mobile.Haptics.note();
 	}
 
 	#if android

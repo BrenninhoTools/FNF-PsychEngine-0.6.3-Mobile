@@ -46,8 +46,12 @@ class MobileButton extends FlxSprite
 	{
 		super.update(elapsed);
 
-		if (pressAnim && justPressed())
-			animation.play('press', true);
+		if (justPressed())
+		{
+			Haptics.menu();
+			if (pressAnim)
+				animation.play('press', true);
+		}
 	}
 
 	public function justPressed():Bool

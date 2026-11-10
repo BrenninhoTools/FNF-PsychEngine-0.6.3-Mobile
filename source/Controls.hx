@@ -280,7 +280,7 @@ class Controls extends FlxActionSet
 	public var ACCEPT(get, never):Bool;
 
 	inline function get_ACCEPT()
-		return _accept.check() #if (mobile) || mobile.TouchUtil.justTapped() #end;
+		return _accept.check() #if (mobile) || mobile.TouchUtil.acceptTapped() #end;
 
 	public var BACK(get, never):Bool;
 

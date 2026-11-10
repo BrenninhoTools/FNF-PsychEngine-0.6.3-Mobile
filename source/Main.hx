@@ -79,7 +79,6 @@ class Main extends Sprite
 		ClientPrefs.loadDefaultKeys();
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, framerate, framerate, skipSplash, startFullscreen));
 
-		#if !mobile
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
@@ -87,6 +86,10 @@ class Main extends Sprite
 		if(fpsVar != null) {
 			fpsVar.visible = ClientPrefs.showFPS;
 		}
+
+		#if mobile
+		resizeFPS();
+		Lib.current.stage.addEventListener(Event.RESIZE, function(_) resizeFPS());
 		#end
 
 		#if html5
@@ -98,6 +101,20 @@ class Main extends Sprite
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
 	}
+
+	#if mobile
+	function resizeFPS():Void
+	{
+		if (fpsVar == null)
+			return;
+
+		var stage = Lib.current.stage;
+		var scale:Float = Math.max(1, Math.min(stage.stageWidth / 1280, stage.stageHeight / 720));
+		fpsVar.scaleX = fpsVar.scaleY = scale;
+		fpsVar.x = 10 * scale;
+		fpsVar.y = 3 * scale;
+	}
+	#end
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work

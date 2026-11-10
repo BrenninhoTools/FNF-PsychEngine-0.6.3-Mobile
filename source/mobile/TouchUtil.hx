@@ -18,16 +18,50 @@ enum SwipeDirection
 
 class TouchUtil
 {
-	public static var tapDistance:Float = 40;
-	public static var swipeDistance:Float = 70;
+	public static var tapDistanceMM:Float = 4;
+	public static var swipeDistanceMM:Float = 7;
+	public static var scrollStepMM:Float = 8;
+	public static var flingMinSpeedMM:Float = 45;
+	public static var flingFactor:Float = 0.12;
+	public static var flingMaxSteps:Int = 6;
+	public static var flingStepDelay:Float = 0.05;
 	public static var swipeRatio:Float = 1.5;
-	public static var scrollStep:Float = 90;
+
+	public static var tapDistance(get, never):Float;
+	public static var swipeDistance(get, never):Float;
+	public static var scrollStep(get, never):Float;
+
+	static function get_tapDistance():Float
+		return mmToGame(tapDistanceMM);
+
+	static function get_swipeDistance():Float
+		return mmToGame(swipeDistanceMM);
+
+	static function get_scrollStep():Float
+		return mmToGame(scrollStepMM);
+
+	public static function mmToGame(mm:Float):Float
+	{
+		var dpi:Float = openfl.system.Capabilities.screenDPI;
+		if (Math.isNaN(dpi) || dpi < 120)
+			dpi = 160;
+		else if (dpi > 640)
+			dpi = 640;
+
+		var scale:Float = (FlxG.scaleMode != null && FlxG.scaleMode.scale.y > 0) ? FlxG.scaleMode.scale.y : 1;
+		return mm / 25.4 * dpi / scale;
+	}
 
 	static var consumedTick:Int = -1;
 	static var refreshedTick:Int = -1;
 	static var draggedTouches:Map<Int, Bool> = new Map();
 	static var scrollTouchID:Int = -1;
 	static var scrollAnchorY:Float = 0;
+	static var scrollStartY:Float = 0;
+	static var scrolling:Bool = false;
+	static var scrollSamples:Array<{time:Float, y:Float}> = [];
+	static var pendingSteps:Int = 0;
+	static var lastPendingTime:Float = 0;
 
 	public static function consume():Void
 	{
@@ -53,6 +87,14 @@ class TouchUtil
 		}
 		#end
 		return false;
+	}
+
+	public static function acceptTapped():Bool
+	{
+		if (!justTapped())
+			return false;
+		Haptics.menu();
+		return true;
 	}
 
 	public static function justTappedOn(object:FlxBasic, ?camera:FlxCamera):Bool
@@ -90,6 +132,7 @@ class TouchUtil
 			{
 				if (consumeTap)
 					consume();
+				Haptics.menu();
 				return i;
 			}
 		}
@@ -130,10 +173,11 @@ class TouchUtil
 			step = scrollStep;
 
 		#if FLX_TOUCH
+		var now:Float = haxe.Timer.stamp();
 		var touch:FlxTouch = null;
 		for (t in FlxG.touches.list)
 		{
-			if (t.touchPointID == scrollTouchID && t.pressed)
+			if (t.touchPointID == scrollTouchID && (t.pressed || t.justReleased))
 			{
 				touch = t;
 				break;
@@ -149,25 +193,87 @@ class TouchUtil
 				{
 					touch = t;
 					scrollTouchID = t.touchPointID;
-					scrollAnchorY = t.justPressedPosition.y;
+					scrollStartY = t.justPressedPosition.y;
+					scrollAnchorY = scrollStartY;
+					scrolling = false;
+					scrollSamples = [];
+					pendingSteps = 0;
 					break;
 				}
 			}
 		}
 
 		if (touch == null)
+			return popPendingStep(now);
+
+		pendingSteps = 0;
+		scrollSamples.push({time: now, y: touch.viewY});
+		while (scrollSamples.length > 0 && now - scrollSamples[0].time > 0.1)
+			scrollSamples.shift();
+
+		var result:Int = 0;
+		if (!scrolling)
+		{
+			var moved:Float = touch.viewY - scrollStartY;
+			if (Math.abs(moved) > tapDistance)
+			{
+				scrolling = true;
+				scrollAnchorY = scrollStartY + (moved > 0 ? tapDistance : -tapDistance);
+				draggedTouches.set(touch.touchPointID, true);
+			}
+		}
+
+		if (scrolling)
+		{
+			var steps:Int = Std.int((touch.viewY - scrollAnchorY) / step);
+			if (steps != 0)
+			{
+				scrollAnchorY += steps * step;
+				result = -steps;
+			}
+		}
+
+		if (touch.justReleased)
+		{
+			if (scrolling && scrollSamples.length > 1)
+			{
+				var first = scrollSamples[0];
+				var last = scrollSamples[scrollSamples.length - 1];
+				var time:Float = last.time - first.time;
+				if (time > 0)
+				{
+					var speed:Float = (last.y - first.y) / time;
+					if (Math.abs(speed) >= mmToGame(flingMinSpeedMM))
+					{
+						var extra:Int = Std.int(Math.min(flingMaxSteps, Math.round(Math.abs(speed) * flingFactor / step)));
+						pendingSteps = speed > 0 ? -extra : extra;
+						lastPendingTime = now;
+					}
+				}
+			}
+			scrollTouchID = -1;
+			scrolling = false;
+			scrollSamples = [];
+		}
+
+		if (result != 0)
+			Haptics.menu();
+		return result;
+		#else
+		return 0;
+		#end
+	}
+
+	static function popPendingStep(now:Float):Int
+	{
+		if (pendingSteps == 0 || now - lastPendingTime < flingStepDelay)
 			return 0;
 
-		var delta:Float = touch.viewY - scrollAnchorY;
-		var steps:Int = Std.int(delta / step);
-		if (steps != 0)
-		{
-			scrollAnchorY += steps * step;
-			draggedTouches.set(touch.touchPointID, true);
-			return -steps;
-		}
-		#end
-		return 0;
+		lastPendingTime = now;
+		var dir:Int = pendingSteps > 0 ? 1 : -1;
+		pendingSteps -= dir;
+		Haptics.menu();
+		return dir;
 	}
 
 	public static function swiped(direction:SwipeDirection):Bool
@@ -179,7 +285,10 @@ class TouchUtil
 		for (swipe in FlxG.swipes)
 		{
 			if (!draggedTouches.exists(swipe.ID) && getDirection(swipe) == direction)
+			{
+				Haptics.menu();
 				return true;
+			}
 		}
 		return false;
 	}
