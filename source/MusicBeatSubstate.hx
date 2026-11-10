@@ -53,6 +53,14 @@ class MusicBeatSubstate extends FlxSubState
 		#end
 	}
 
+	override function create()
+	{
+		super.create();
+		#if mobile
+		mobile.ScreenUtil.fitBackgrounds(this);
+		#end
+	}
+
 	override function destroy()
 	{
 		#if mobile

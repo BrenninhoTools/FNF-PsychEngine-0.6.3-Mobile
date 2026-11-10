@@ -1,0 +1,213 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version
+        required: true
+        default: v0.6.3
+      prerelease:
+        description: Mark as pre-release
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  HAXE_VERSION: 4.3.7
+  HAXELIB_DIR: ${{ github.workspace }}/.haxelib
+  HXCPP_COMPILE_CACHE: ${{ github.workspace }}/.hxcpp_cache
+
+jobs:
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: ${{ env.HAXE_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21e
+          add-to-path: false
+
+      - name: Restore Haxelibs
+        id: cache-haxelib
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HAXELIB_DIR }}
+          key: haxelib-android-${{ env.HAXE_VERSION }}-${{ hashFiles('Project.xml', '.github/workflows/main.yml') }}
+
+      - name: Install Haxelibs
+        if: steps.cache-haxelib.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$HAXELIB_DIR"
+          haxelib setup "$HAXELIB_DIR"
+          haxelib --never install hxcpp --quiet
+          haxelib --never install lime --quiet
+          haxelib --never install openfl --quiet
+          haxelib --never install flixel --quiet
+          haxelib --never install flixel-addons --quiet
+          haxelib --never install flixel-ui --quiet
+          haxelib --never install hscript --quiet
+          haxelib --never install hxvlc --quiet
+          haxelib --never install extension-androidtools --quiet
+          haxelib --never git linc_luajit https://github.com/HomuHomu833/linc_luajit --quiet
+
+      - name: Configure Haxelib
+        run: |
+          haxelib setup "$HAXELIB_DIR"
+          haxelib list
+
+      - name: Restore HXCPP Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HXCPP_COMPILE_CACHE }}
+          key: hxcpp-android-${{ github.sha }}
+          restore-keys: hxcpp-android-
+
+      - name: Configure Lime
+        run: |
+          echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> "$GITHUB_ENV"
+          echo "${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+          haxelib run lime config ANDROID_SDK "$ANDROID_HOME"
+          haxelib run lime config ANDROID_NDK_ROOT "${{ steps.setup-ndk.outputs.ndk-path }}"
+          haxelib run lime config JAVA_HOME "$JAVA_HOME"
+          haxelib run lime config ANDROID_SETUP true
+
+      - name: Build
+        run: haxelib run lime build android
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: androidBuild
+          path: export/release/android/bin/app/build/outputs/apk/*/*.apk
+          if-no-files-found: error
+
+  ios:
+    name: iOS
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Haxe
+        run: |
+          brew install neko
+          curl -sSfL -o "$RUNNER_TEMP/haxe.tar.gz" "https://github.com/HaxeFoundation/haxe/releases/download/$HAXE_VERSION/haxe-$HAXE_VERSION-osx.tar.gz"
+          mkdir -p "$HOME/haxe"
+          tar xzf "$RUNNER_TEMP/haxe.tar.gz" -C "$HOME/haxe" --strip-components=1
+          echo "$HOME/haxe" >> "$GITHUB_PATH"
+          echo "HAXE_STD_PATH=$HOME/haxe/std" >> "$GITHUB_ENV"
+          "$HOME/haxe/haxe" --version
+          "$HOME/haxe/haxelib" version
+
+      - name: Restore Haxelibs
+        id: cache-haxelib
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HAXELIB_DIR }}
+          key: haxelib-ios-${{ env.HAXE_VERSION }}-${{ hashFiles('Project.xml', '.github/workflows/main.yml') }}
+
+      - name: Install Haxelibs
+        if: steps.cache-haxelib.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$HAXELIB_DIR"
+          haxelib setup "$HAXELIB_DIR"
+          haxelib --never install hxcpp --quiet
+          haxelib --never install lime --quiet
+          haxelib --never install openfl --quiet
+          haxelib --never install flixel --quiet
+          haxelib --never install flixel-addons --quiet
+          haxelib --never install flixel-ui --quiet
+          haxelib --never install hscript --quiet
+          haxelib --never install hxvlc --quiet
+          haxelib --never git linc_luajit https://github.com/HomuHomu833/linc_luajit --quiet
+
+      - name: Configure Haxelib
+        run: |
+          haxelib setup "$HAXELIB_DIR"
+          haxelib list
+
+      - name: Restore HXCPP Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HXCPP_COMPILE_CACHE }}
+          key: hxcpp-ios-${{ github.sha }}
+          restore-keys: hxcpp-ios-
+
+      - name: Build
+        run: haxelib run lime build ios -nosign
+
+      - name: Package IPA
+        run: |
+          cd export/release/ios/build/Release-iphoneos
+          mkdir -p Payload
+          cp -R *.app Payload/
+          zip -qr PsychEngine063.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOSBuild
+          path: export/release/ios/build/Release-iphoneos/PsychEngine063.ipa
+          if-no-files-found: error
+
+  release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [android, ios]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare Files
+        run: |
+          mkdir -p release
+          cp artifacts/androidBuild/*.apk "release/PsychEngine063-${{ inputs.version }}-Android.apk"
+          cp artifacts/iOSBuild/PsychEngine063.ipa "release/PsychEngine063-${{ inputs.version }}-iOS.ipa"
+          if [ -f "documents/release/${{ inputs.version }}.md" ]; then
+            cp "documents/release/${{ inputs.version }}.md" release-notes.md
+          else
+            echo "FNF: Psych Engine 0.6.3 Mobile ${{ inputs.version }}" > release-notes.md
+          fi
+          ls -l release
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: FNF Psych Engine 0.6.3 Mobile ${{ inputs.version }}
+          body_path: release-notes.md
+          prerelease: ${{ inputs.prerelease }}
+          target_commitish: ${{ github.sha }}
+          files: release/*

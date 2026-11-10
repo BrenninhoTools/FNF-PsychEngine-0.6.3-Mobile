@@ -62,6 +62,9 @@ class MusicBeatState extends FlxUIState
 		camBeat = FlxG.camera;
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		super.create();
+		#if mobile
+		mobile.ScreenUtil.fitBackgrounds(this);
+		#end
 
 		if(!skip) {
 			openSubState(new CustomFadeTransition(0.7, true));

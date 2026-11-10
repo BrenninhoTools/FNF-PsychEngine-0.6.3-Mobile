@@ -40,6 +40,7 @@ class ClientPrefs {
 	public static var haptics:Bool = true;
 	public static var hapticsType:String = 'All';
 	public static var hitboxMode:String = 'Four Lanes';
+	public static var screenStyle:String = 'Original';
 	public static var hapticsIntensity:Float = 1;
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
@@ -163,6 +164,7 @@ class ClientPrefs {
 		FlxG.save.data.haptics = haptics;
 		FlxG.save.data.hapticsType = hapticsType;
 		FlxG.save.data.hitboxMode = hitboxMode;
+		FlxG.save.data.screenStyle = screenStyle;
 		FlxG.save.data.hapticsIntensity = hapticsIntensity;
 	
 		FlxG.save.flush();
@@ -193,6 +195,12 @@ class ClientPrefs {
 		if(FlxG.save.data.hitboxMode != null) {
 			hitboxMode = FlxG.save.data.hitboxMode;
 		}
+		if(FlxG.save.data.screenStyle != null) {
+			screenStyle = FlxG.save.data.screenStyle;
+		}
+		#if mobile
+		mobile.ScreenUtil.apply(screenStyle);
+		#end
 		if(FlxG.save.data.hapticsIntensity != null) {
 			hapticsIntensity = FlxG.save.data.hapticsIntensity;
 		}

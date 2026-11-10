@@ -66,6 +66,17 @@ class MobileOptionsSubState extends BaseOptionsMenu
 		option.onChange = onChangeHaptics;
 		addOption(option);
 
+		#if mobile
+		var option:Option = new Option('Screen Style',
+			'Original: the classic 16:9 screen.\nFull: uses the whole screen without stretching.',
+			'screenStyle',
+			'string',
+			'Original',
+			mobile.ScreenUtil.styles);
+		option.onChange = onChangeScreenStyle;
+		addOption(option);
+		#end
+
 		#if android
 		ClientPrefs.storageType = mobile.StorageUtil.getStorageType();
 		var option:Option = new Option('Storage Type',
@@ -80,6 +91,13 @@ class MobileOptionsSubState extends BaseOptionsMenu
 
 		super();
 	}
+
+	#if mobile
+	function onChangeScreenStyle()
+	{
+		mobile.ScreenUtil.apply(ClientPrefs.screenStyle);
+	}
+	#end
 
 	function onChangeHaptics()
 	{

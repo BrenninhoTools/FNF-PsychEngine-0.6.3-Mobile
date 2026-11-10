@@ -23,8 +23,8 @@ class TouchUtil
 	public static var scrollStepMM:Float = 8;
 	public static var flingMinSpeedMM:Float = 45;
 	public static var flingFactor:Float = 0.12;
-	public static var flingMaxSteps:Int = 6;
-	public static var flingStepDelay:Float = 0.05;
+	public static var flingMaxSteps:Int = 8;
+	public static var flingStepDelay:Float = 0.04;
 	public static var swipeRatio:Float = 1.5;
 	public static var tapMarginMM:Float = 1.5;
 
@@ -62,6 +62,7 @@ class TouchUtil
 	static var scrolling:Bool = false;
 	static var scrollSamples:Array<{time:Float, y:Float}> = [];
 	static var pendingSteps:Int = 0;
+	static var pendingTotal:Int = 0;
 	static var lastPendingTime:Float = 0;
 
 	public static function consume():Void
@@ -226,6 +227,13 @@ class TouchUtil
 
 		if (scrolling)
 		{
+			var dragSpeed:Float = getSampleSpeed();
+			var speedMM:Float = Math.abs(dragSpeed) / mmToGame(1);
+			if (speedMM > 220)
+				step *= 0.5;
+			else if (speedMM > 110)
+				step *= 0.7;
+
 			var steps:Int = Std.int((touch.viewY - scrollAnchorY) / step);
 			if (steps != 0)
 			{
@@ -238,18 +246,13 @@ class TouchUtil
 		{
 			if (scrolling && scrollSamples.length > 1)
 			{
-				var first = scrollSamples[0];
-				var last = scrollSamples[scrollSamples.length - 1];
-				var time:Float = last.time - first.time;
-				if (time > 0)
+				var speed:Float = getSampleSpeed();
+				if (Math.abs(speed) >= mmToGame(flingMinSpeedMM))
 				{
-					var speed:Float = (last.y - first.y) / time;
-					if (Math.abs(speed) >= mmToGame(flingMinSpeedMM))
-					{
-						var extra:Int = Std.int(Math.min(flingMaxSteps, Math.round(Math.abs(speed) * flingFactor / step)));
-						pendingSteps = speed > 0 ? -extra : extra;
-						lastPendingTime = now;
-					}
+					var extra:Int = Std.int(Math.min(flingMaxSteps, Math.round(Math.abs(speed) * flingFactor / scrollStep)));
+					pendingSteps = speed > 0 ? -extra : extra;
+					pendingTotal = extra;
+					lastPendingTime = now;
 				}
 			}
 			scrollTouchID = -1;
@@ -265,9 +268,25 @@ class TouchUtil
 		#end
 	}
 
+	static function getSampleSpeed():Float
+	{
+		if (scrollSamples.length < 2)
+			return 0;
+
+		var first = scrollSamples[0];
+		var last = scrollSamples[scrollSamples.length - 1];
+		var time:Float = last.time - first.time;
+		return time > 0 ? (last.y - first.y) / time : 0;
+	}
+
 	static function popPendingStep(now:Float):Int
 	{
-		if (pendingSteps == 0 || now - lastPendingTime < flingStepDelay)
+		if (pendingSteps == 0)
+			return 0;
+
+		var done:Int = pendingTotal - Std.int(Math.abs(pendingSteps));
+		var delay:Float = flingStepDelay * (1 + done * 0.35);
+		if (now - lastPendingTime < delay)
 			return 0;
 
 		lastPendingTime = now;

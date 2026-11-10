@@ -220,6 +220,7 @@ class PlayState extends MusicBeatState
 	public var arrowsMode:Bool = false;
 	public static var arrowsScale:Float = 1.15;
 	public static var arrowsSpacing:Float = 0.78;
+	public static var arrowsOpponentScale:Float = 0.5;
 	public var camControls:FlxCamera;
 	public var hitbox:mobile.Hitbox;
 	public var pauseButton:mobile.MobileButton;
@@ -341,7 +342,7 @@ class PlayState extends MusicBeatState
 		#if mobile
 		arrowsMode = ClientPrefs.hitboxMode == 'Arrows';
 		if (arrowsMode)
-			ClientPrefs.overrideScroll(true, false, false);
+			ClientPrefs.overrideScroll(true, false, true);
 		#end
 
 		// for lua
@@ -2785,6 +2786,15 @@ class PlayState extends MusicBeatState
 				babyArrow.x = FlxG.width / 2 + (i - 1.5) * step - babyArrow.width / 2;
 				babyArrow.y = FlxG.height - babyArrow.height - 30;
 			}
+			else if (arrowsMode && player == 0)
+			{
+				babyArrow.scale.x *= arrowsOpponentScale;
+				babyArrow.scale.y *= arrowsOpponentScale;
+				babyArrow.updateHitbox();
+				babyArrow.playAnim('static', true);
+				babyArrow.x = 20 + i * (babyArrow.width + 2);
+				babyArrow.y = healthBarBG != null ? healthBarBG.y + healthBarBG.height / 2 - babyArrow.height / 2 : FlxG.height * 0.11 - babyArrow.height / 2;
+			}
 			#end
 		}
 	}
@@ -3236,7 +3246,9 @@ class PlayState extends MusicBeatState
 			{
 				var dunceNote:Note = unspawnNotes[0];
 				#if mobile
-				if (arrowsMode && dunceNote.mustPress)
+				if (arrowsMode && !dunceNote.mustPress)
+					dunceNote.visible = false;
+				else if (arrowsMode && dunceNote.mustPress)
 				{
 					dunceNote.scale.x *= arrowsScale;
 					if (!dunceNote.isSustainNote)
