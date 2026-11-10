@@ -343,11 +343,10 @@ class TitleState extends MusicBeatState
 			path = "mods/images/titleEnter.png";
 		}
 		//trace(path, FileSystem.exists(path));
-		if (!FileSystem.exists(path)){
-			path = "assets/images/titleEnter.png";
-		}
-		//trace(path, FileSystem.exists(path));
-		titleText.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
+		if (FileSystem.exists(path))
+			titleText.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
+		else
+			titleText.frames = Paths.getSparrowAtlas('titleEnter');
 		#else
 
 		titleText.frames = Paths.getSparrowAtlas('titleEnter');
