@@ -104,6 +104,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Neko
+        run: |
+          brew install neko
+          ls -l "$(brew --prefix)/lib/libneko.2.dylib"
+
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1
         with:
