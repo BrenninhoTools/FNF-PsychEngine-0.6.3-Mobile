@@ -2766,6 +2766,7 @@ class PlayState extends MusicBeatState
 		if (paused)
 		{
 			#if mobile
+			mobile.Haptics.stopAll();
 			if (hitbox != null)
 			{
 				hitbox.clearInput();
@@ -4893,6 +4894,9 @@ class PlayState extends MusicBeatState
 	{
 		//trace('Car drive');
 		FlxG.sound.play(Paths.soundRandom('carPass', 0, 1), 0.7);
+		#if mobile
+		mobile.Haptics.carPass();
+		#end
 
 		fastCar.velocity.x = (FlxG.random.int(170, 220) / FlxG.elapsed) * 3;
 		fastCarCanDrive = false;
@@ -4937,7 +4941,7 @@ class PlayState extends MusicBeatState
 
 			#if mobile
 			if (!trainFinishing || phillyTrain.x > -2000)
-				mobile.Haptics.rumble();
+				mobile.Haptics.trainPassing();
 			#end
 
 			if (phillyTrain.x < -2000 && !trainFinishing)

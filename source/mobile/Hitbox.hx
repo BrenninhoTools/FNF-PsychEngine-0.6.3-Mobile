@@ -8,7 +8,6 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.util.FlxColor;
 import openfl.display.BitmapData;
 import openfl.display.Shape;
-import openfl.geom.Matrix;
 
 class Hitbox extends FlxTypedSpriteGroup<HitboxHint>
 {
@@ -72,8 +71,8 @@ class Hitbox extends FlxTypedSpriteGroup<HitboxHint>
 
 class HitboxHint extends FlxSprite
 {
-	public var idleAlpha:Float = 0.15;
-	public var pressedAlpha:Float = 0.6;
+	public var idleAlpha:Float = 0.25;
+	public var pressedAlpha:Float = 0.8;
 
 	public function new(x:Float, y:Float, width:Int, height:Int, color:FlxColor)
 	{
@@ -93,19 +92,17 @@ class HitboxHint extends FlxSprite
 
 	static function createGraphic(width:Int, height:Int, color:FlxColor):FlxGraphic
 	{
-		var key:String = 'hitbox_hint_${width}_${height}_${color.toHexString()}';
+		var key:String = 'hitbox_flat_${width}_${height}_${color.toHexString()}';
 		var cached:FlxGraphic = FlxG.bitmap.get(key);
 		if (cached != null)
 			return cached;
 
 		var shape:Shape = new Shape();
-		var matrix:Matrix = new Matrix();
-		matrix.createGradientBox(width, height, 0, 0, 0);
-		shape.graphics.beginGradientFill(LINEAR, [color.rgb, color.rgb, color.rgb], [0.6, 0, 0.6], [0, 127, 255], matrix);
+		shape.graphics.beginFill(color.rgb, 0.35);
 		shape.graphics.drawRect(0, 0, width, height);
 		shape.graphics.endFill();
-		shape.graphics.lineStyle(4, color.rgb, 1);
-		shape.graphics.drawRect(2, 2, width - 4, height - 4);
+		shape.graphics.lineStyle(6, color.rgb, 1);
+		shape.graphics.drawRect(3, 3, width - 6, height - 6);
 
 		var bitmap:BitmapData = new BitmapData(width, height, true, 0);
 		bitmap.draw(shape, null, null, null, null, true);
