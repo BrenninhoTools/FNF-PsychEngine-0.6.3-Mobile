@@ -40,9 +40,8 @@ jobs:
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r25c
+          ndk-version: r21e
           add-to-path: false
-          local-cache: true
 
       - name: Restore Haxelibs
         id: cache-haxelib
