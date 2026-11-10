@@ -33,6 +33,10 @@ class ClientPrefs {
 	public static var pauseMusic:String = 'Tea Time';
 	public static var checkForUpdates:Bool = true;
 	public static var comboStacking = true;
+	public static var invisibleHitbox:Bool = false;
+	public static var invisiblePauseButton:Bool = false;
+	public static var chartEditorInPause:Bool = false;
+	public static var storageType:String = 'Data';
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
 		'scrolltype' => 'multiplicative', 
@@ -130,6 +134,9 @@ class ClientPrefs {
 		FlxG.save.data.pauseMusic = pauseMusic;
 		FlxG.save.data.checkForUpdates = checkForUpdates;
 		FlxG.save.data.comboStacking = comboStacking;
+		FlxG.save.data.invisibleHitbox = invisibleHitbox;
+		FlxG.save.data.invisiblePauseButton = invisiblePauseButton;
+		FlxG.save.data.chartEditorInPause = chartEditorInPause;
 	
 		FlxG.save.flush();
 
@@ -141,6 +148,16 @@ class ClientPrefs {
 	}
 
 	public static function loadPrefs() {
+		if(FlxG.save.data.invisibleHitbox != null) {
+			invisibleHitbox = FlxG.save.data.invisibleHitbox;
+		}
+		if(FlxG.save.data.invisiblePauseButton != null) {
+			invisiblePauseButton = FlxG.save.data.invisiblePauseButton;
+		}
+		if(FlxG.save.data.chartEditorInPause != null) {
+			chartEditorInPause = FlxG.save.data.chartEditorInPause;
+		}
+		storageType = mobile.StorageUtil.getStorageType();
 		if(FlxG.save.data.downScroll != null) {
 			downScroll = FlxG.save.data.downScroll;
 		}

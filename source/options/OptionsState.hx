@@ -88,11 +88,32 @@ class OptionsState extends MusicBeatState
 
 		super.create();
 		addBackButton();
+
+		#if mobile
+		mobileOptionsButton = new mobile.MobileButton(0, 0, 'optionsButton', null, 0.5);
+		mobileOptionsButton.setPosition(FlxG.width - mobileOptionsButton.width - 10, 10);
+		mobileOptionsButton.cameras = [mobileCamera];
+		add(mobileOptionsButton);
+		#end
 	}
+
+	#if mobile
+	var mobileOptionsButton:mobile.MobileButton;
+
+	override function openSubState(subState:flixel.FlxSubState) {
+		if (mobileOptionsButton != null)
+			mobileOptionsButton.visible = false;
+		super.openSubState(subState);
+	}
+	#end
 
 	override function closeSubState() {
 		super.closeSubState();
 		ClientPrefs.saveSettings();
+		#if mobile
+		if (mobileOptionsButton != null)
+			mobileOptionsButton.visible = true;
+		#end
 	}
 
 	override function update(elapsed:Float) {
@@ -116,6 +137,13 @@ class OptionsState extends MusicBeatState
 			MusicBeatState.switchState(new MainMenuState());
 		}
 
+		#if mobile
+		if (mobileOptionsButton != null && mobileOptionsButton.justPressed()) {
+			FlxG.sound.play(Paths.sound('scrollMenu'));
+			openSubState(new options.MobileOptionsSubState());
+		}
+		else
+		#end
 		if (controls.ACCEPT) {
 			openSelectedSubstate(options[curSelected]);
 		}

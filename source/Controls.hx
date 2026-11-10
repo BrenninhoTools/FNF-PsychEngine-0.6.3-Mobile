@@ -160,22 +160,22 @@ class Controls extends FlxActionSet
 	public var UI_UP(get, never):Bool;
 
 	inline function get_UI_UP()
-		return _ui_up.check();
+		return _ui_up.check() #if (mobile) || mobile.TouchUtil.swiped(UP) #end;
 
 	public var UI_LEFT(get, never):Bool;
 
 	inline function get_UI_LEFT()
-		return _ui_left.check();
+		return _ui_left.check() #if (mobile) || mobile.TouchUtil.swiped(LEFT) #end;
 
 	public var UI_RIGHT(get, never):Bool;
 
 	inline function get_UI_RIGHT()
-		return _ui_right.check();
+		return _ui_right.check() #if (mobile) || mobile.TouchUtil.swiped(RIGHT) #end;
 
 	public var UI_DOWN(get, never):Bool;
 
 	inline function get_UI_DOWN()
-		return _ui_down.check();
+		return _ui_down.check() #if (mobile) || mobile.TouchUtil.swiped(DOWN) #end;
 
 	public var UI_UP_P(get, never):Bool;
 

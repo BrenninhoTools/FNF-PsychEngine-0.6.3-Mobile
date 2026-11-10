@@ -52,6 +52,10 @@ class PauseSubState extends MusicBeatSubstate
 			menuItemsOG.insert(4 + num, 'Toggle Practice Mode');
 			menuItemsOG.insert(5 + num, 'Toggle Botplay');
 		}
+		#if mobile
+		if (ClientPrefs.chartEditorInPause)
+			menuItemsOG.insert(menuItemsOG.indexOf('Restart Song') + 1, 'Chart Editor');
+		#end
 		menuItems = menuItemsOG;
 
 		for (i in 0...CoolUtil.difficulties.length) {
@@ -230,6 +234,8 @@ class PauseSubState extends MusicBeatSubstate
 					practiceText.visible = PlayState.instance.practiceMode;
 				case "Restart Song":
 					restartSong();
+				case 'Chart Editor':
+					@:privateAccess PlayState.instance.openChartEditor();
 				case "Leave Charting Mode":
 					restartSong();
 					PlayState.chartingMode = false;

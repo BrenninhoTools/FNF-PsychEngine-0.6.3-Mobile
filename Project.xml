@@ -194,6 +194,12 @@
 		<architecture exclude="x86" />
 	</section>
 
+	<section if="android">
+		<android permission="android.permission.READ_EXTERNAL_STORAGE" />
+		<android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
+		<android permission="android.permission.MANAGE_EXTERNAL_STORAGE" />
+	</section>
+
 	<template path="templates" if="ios" />
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->

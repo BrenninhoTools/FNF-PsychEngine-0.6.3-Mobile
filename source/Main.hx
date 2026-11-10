@@ -68,6 +68,10 @@ class Main extends Sprite
 
 	private function setupGame():Void
 	{
+		#if android
+		if (mobile.StorageUtil.getStorageType() == 'External')
+			mobile.StorageUtil.requestPermissions();
+		#end
 		#if mobile
 		Sys.setCwd(mobile.StorageUtil.getStorageDirectory());
 		#end

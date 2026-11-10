@@ -135,6 +135,15 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var holdValue:Float = 0;
 	override function update(elapsed:Float)
 	{
+		#if mobile
+		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpOptions.members, curSelected);
+		if (tappedOption > -1)
+		{
+			changeSelection(tappedOption - curSelected);
+			FlxG.sound.play(Paths.sound('scrollMenu'));
+		}
+		#end
+
 		if (controls.UI_UP_P)
 		{
 			changeSelection(-1);

@@ -29,6 +29,12 @@ class Hitbox extends FlxTypedSpriteGroup<HitboxHint>
 		for (i in 0...4)
 		{
 			var hint:HitboxHint = new HitboxHint(hintWidth * i, 0, hintWidth, FlxG.height, colors[i]);
+			if (ClientPrefs.invisibleHitbox)
+			{
+				hint.idleAlpha = 0;
+				hint.pressedAlpha = 0;
+				hint.setPressed(false);
+			}
 			add(hint);
 		}
 
@@ -66,8 +72,8 @@ class Hitbox extends FlxTypedSpriteGroup<HitboxHint>
 
 class HitboxHint extends FlxSprite
 {
-	public static var idleAlpha:Float = 0.15;
-	public static var pressedAlpha:Float = 0.6;
+	public var idleAlpha:Float = 0.15;
+	public var pressedAlpha:Float = 0.6;
 
 	public function new(x:Float, y:Float, width:Int, height:Int, color:FlxColor)
 	{
