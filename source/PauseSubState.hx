@@ -7,7 +7,7 @@ import flixel.FlxSubState;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.input.keyboard.FlxKey;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -145,6 +145,12 @@ class PauseSubState extends MusicBeatSubstate
 
 		super.update(elapsed);
 		updateSkipTextStuff();
+
+		#if mobile
+		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpMenuShit.members, curSelected, cameras[0]);
+		if (tappedOption > -1)
+			changeSelection(tappedOption - curSelected);
+		#end
 
 		var upP = controls.UI_UP_P;
 		var downP = controls.UI_DOWN_P;

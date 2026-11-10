@@ -27,7 +27,7 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -72,7 +72,7 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED
-import vlc.MP4Handler;
+import hxvlc.flixel.FlxVideo;
 #end
 
 using StringTools;
@@ -216,6 +216,11 @@ class PlayState extends MusicBeatState
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
 	public var camOther:FlxCamera;
+	#if mobile
+	public var camControls:FlxCamera;
+	public var hitbox:mobile.Hitbox;
+	public var pauseButton:mobile.MobileButton;
+	#end
 	public var cameraSpeed:Float = 1;
 
 	var dialogue:Array<String> = ['blah blah blah', 'coolswag'];
@@ -398,11 +403,27 @@ class PlayState extends MusicBeatState
 
 		FlxG.cameras.reset(camGame);
 		FlxG.cameras.add(camHUD, false);
+		#if mobile
+		camControls = new FlxCamera();
+		camControls.bgColor.alpha = 0;
+		FlxG.cameras.add(camControls, false);
+		#end
 		FlxG.cameras.add(camOther, false);
 		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
 
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
 		CustomFadeTransition.nextCamera = camOther;
+
+		#if mobile
+		hitbox = new mobile.Hitbox(camControls);
+		hitbox.visible = !cpuControlled;
+		add(hitbox);
+
+		pauseButton = new mobile.MobileButton(0, 0, 'pauseButton', 'pause', 0.8);
+		pauseButton.setPosition(FlxG.width - pauseButton.width - 10, 10);
+		pauseButton.cameras = [camControls];
+		add(pauseButton);
+		#end
 
 		persistentUpdate = true;
 		persistentDraw = true;
@@ -1486,8 +1507,7 @@ class PlayState extends MusicBeatState
 			FlxG.sound.music.pitch = value;
 		}
 		playbackRate = value;
-		FlxAnimationController.globalSpeed = value;
-		trace('Anim speed: ' + FlxAnimationController.globalSpeed);
+		FlxG.animationTimeScale = value;
 		Conductor.safeZoneOffset = (ClientPrefs.safeFrames / 60) * 1000 * value;
 		setOnLuas('playbackRate', playbackRate);
 		return value;
@@ -1617,12 +1637,21 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
-		var video:MP4Handler = new MP4Handler();
-		video.playVideo(filepath);
-		video.finishCallback = function()
+		var video:FlxVideo = new FlxVideo();
+		video.onEndReached.add(function()
 		{
+			video.dispose();
+			FlxG.removeChild(video);
 			startAndEnd();
-			return;
+		}, true);
+		FlxG.addChildBelowMouse(video);
+		if (video.load(filepath))
+			new FlxTimer().start(0.001, function(_) video.play());
+		else
+		{
+			video.dispose();
+			FlxG.removeChild(video);
+			startAndEnd();
 		}
 		#else
 		FlxG.log.warn('Platform not supported!');
@@ -2735,6 +2764,16 @@ class PlayState extends MusicBeatState
 	{
 		if (paused)
 		{
+			#if mobile
+			if (hitbox != null)
+			{
+				hitbox.clearInput();
+				hitbox.visible = false;
+			}
+			if (pauseButton != null)
+				pauseButton.visible = false;
+			#end
+
 			if (FlxG.sound.music != null)
 			{
 				FlxG.sound.music.pause();
@@ -2772,6 +2811,13 @@ class PlayState extends MusicBeatState
 	{
 		if (paused)
 		{
+			#if mobile
+			if (hitbox != null)
+				hitbox.visible = !cpuControlled;
+			if (pauseButton != null)
+				pauseButton.visible = true;
+			#end
+
 			if (FlxG.sound.music != null && !startingSong)
 			{
 				resyncVocals();
@@ -3032,7 +3078,7 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE && startedCountdown && canPause)
+		if ((controls.PAUSE #if (mobile) || (pauseButton != null && pauseButton.justPressed()) #end) && startedCountdown && canPause)
 		{
 			var ret:Dynamic = callOnLuas('onPause', [], false);
 			if(ret != FunkinLua.Function_Stop) {
@@ -4308,9 +4354,14 @@ class PlayState extends MusicBeatState
 	{
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = getKeyFromEvent(eventKey);
-		//trace('Pressed: ' + eventKey);
 
-		if (!cpuControlled && startedCountdown && !paused && key > -1 && (FlxG.keys.checkStatus(eventKey, JUST_PRESSED) || ClientPrefs.controllerMode))
+		if (key > -1 && (FlxG.keys.checkStatus(eventKey, JUST_PRESSED) || ClientPrefs.controllerMode))
+			keyPressed(key);
+	}
+
+	private function keyPressed(key:Int):Void
+	{
+		if (!cpuControlled && startedCountdown && !paused && key > -1)
 		{
 			if(!boyfriend.stunned && generatedMusic && !endingSong)
 			{
@@ -4402,7 +4453,11 @@ class PlayState extends MusicBeatState
 	private function onKeyRelease(event:KeyboardEvent):Void
 	{
 		var eventKey:FlxKey = event.keyCode;
-		var key:Int = getKeyFromEvent(eventKey);
+		keyReleased(getKeyFromEvent(eventKey));
+	}
+
+	private function keyReleased(key:Int):Void
+	{
 		if(!cpuControlled && startedCountdown && !paused && key > -1)
 		{
 			var spr:StrumNote = playerStrums.members[key];
@@ -4440,6 +4495,19 @@ class PlayState extends MusicBeatState
 		// HOLDING
 		var parsedHoldArray:Array<Bool> = parseKeys();
 
+		#if mobile
+		if (hitbox != null && hitbox.visible)
+		{
+			for (i in 0...parsedHoldArray.length)
+			{
+				if (hitbox.justPressed[i] && strumsBlocked[i] != true)
+					keyPressed(i);
+				if (hitbox.pressed[i])
+					parsedHoldArray[i] = true;
+			}
+		}
+		#end
+
 		// TO DO: Find a better way to handle controller inputs, this should work for now
 		if(ClientPrefs.controllerMode)
 		{
@@ -4449,7 +4517,7 @@ class PlayState extends MusicBeatState
 				for (i in 0...parsedArray.length)
 				{
 					if(parsedArray[i] && strumsBlocked[i] != true)
-						onKeyPress(new KeyboardEvent(KeyboardEvent.KEY_DOWN, true, true, -1, keysArray[i][0]));
+						keyPressed(i);
 				}
 			}
 		}
@@ -4482,6 +4550,17 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		#if mobile
+		if (hitbox != null)
+		{
+			for (i in 0...hitbox.justReleased.length)
+			{
+				if (hitbox.justReleased[i] || (hitbox.pressed[i] && strumsBlocked[i] == true))
+					keyReleased(i);
+			}
+		}
+		#end
+
 		// TO DO: Find a better way to handle controller inputs, this should work for now
 		if(ClientPrefs.controllerMode || strumsBlocked.contains(true))
 		{
@@ -4491,7 +4570,7 @@ class PlayState extends MusicBeatState
 				for (i in 0...parsedArray.length)
 				{
 					if(parsedArray[i] || strumsBlocked[i] == true)
-						onKeyRelease(new KeyboardEvent(KeyboardEvent.KEY_UP, true, true, -1, keysArray[i][0]));
+						keyReleased(i);
 				}
 			}
 		}
@@ -4980,7 +5059,7 @@ class PlayState extends MusicBeatState
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		}
-		FlxAnimationController.globalSpeed = 1;
+		FlxG.animationTimeScale = 1;
 		FlxG.sound.music.pitch = 1;
 		super.destroy();
 	}

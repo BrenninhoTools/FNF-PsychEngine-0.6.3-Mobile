@@ -3,7 +3,7 @@ package;
 #if desktop
 import Discord.DiscordClient;
 #end
-import flash.text.TextField;
+import openfl.text.TextField;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.display.FlxGridOverlay;
@@ -72,6 +72,7 @@ class AchievementsMenuState extends MusicBeatState
 		changeSelection();
 
 		super.create();
+		addBackButton();
 	}
 
 	override function update(elapsed:Float) {

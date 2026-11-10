@@ -1,8 +1,10 @@
 package;
 
-import Sys.sleep;
-import discord_rpc.DiscordRpc;
-
+#if DISCORD_ALLOWED
+import hxdiscord_rpc.Discord;
+import hxdiscord_rpc.Types;
+import sys.thread.Thread;
+#end
 #if LUA_ALLOWED
 import llua.Lua;
 import llua.State;
@@ -13,88 +15,81 @@ using StringTools;
 class DiscordClient
 {
 	public static var isInitialized:Bool = false;
-	public function new()
-	{
-		trace("Discord Client starting...");
-		DiscordRpc.start({
-			clientID: "863222024192262205",
-			onReady: onReady,
-			onError: onError,
-			onDisconnected: onDisconnected
-		});
-		trace("Discord Client started.");
 
-		while (true)
-		{
-			DiscordRpc.process();
-			sleep(2);
-			//trace("Discord Client Update");
-		}
-
-		DiscordRpc.shutdown();
-	}
-	
-	public static function shutdown()
-	{
-		DiscordRpc.shutdown();
-	}
-	
-	static function onReady()
-	{
-		DiscordRpc.presence({
-			details: "In the Menus",
-			state: null,
-			largeImageKey: 'icon',
-			largeImageText: "Psych Engine"
-		});
-	}
-
-	static function onError(_code:Int, _message:String)
-	{
-		trace('Error! $_code : $_message');
-	}
-
-	static function onDisconnected(_code:Int, _message:String)
-	{
-		trace('Disconnected! $_code : $_message');
-	}
+	#if DISCORD_ALLOWED
+	static final clientID:String = "863222024192262205";
+	static var presence:DiscordRichPresence = new DiscordRichPresence();
 
 	public static function initialize()
 	{
-		var DiscordDaemon = sys.thread.Thread.create(() ->
+		if (isInitialized)
+			return;
+
+		var handlers:DiscordEventHandlers = new DiscordEventHandlers();
+		handlers.ready = cpp.Function.fromStaticFunction(onReady);
+		handlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
+		handlers.errored = cpp.Function.fromStaticFunction(onError);
+		Discord.Initialize(clientID, cpp.RawPointer.addressOf(handlers), false, null);
+
+		Thread.create(function()
 		{
-			new DiscordClient();
+			while (true)
+			{
+				#if DISCORD_DISABLE_IO_THREAD
+				Discord.UpdateConnection();
+				#end
+				Discord.RunCallbacks();
+				Sys.sleep(2);
+			}
 		});
-		trace("Discord Client initialized");
 		isInitialized = true;
 	}
 
-	public static function changePresence(details:String, state:Null<String>, ?smallImageKey : String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
+	public static function shutdown()
 	{
-		var startTimestamp:Float = if(hasStartTimestamp) Date.now().getTime() else 0;
-
-		if (endTimestamp > 0)
-		{
-			endTimestamp = startTimestamp + endTimestamp;
-		}
-
-		DiscordRpc.presence({
-			details: details,
-			state: state,
-			largeImageKey: 'icon',
-			largeImageText: "Engine Version: " + MainMenuState.psychEngineVersion,
-			smallImageKey : smallImageKey,
-			// Obtained times are in milliseconds so they are divided so Discord can use it
-			startTimestamp : Std.int(startTimestamp / 1000),
-            endTimestamp : Std.int(endTimestamp / 1000)
-		});
-
-		//trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp');
+		if (!isInitialized)
+			return;
+		Discord.Shutdown();
+		isInitialized = false;
 	}
 
+	static function onReady(request:cpp.RawConstPointer<DiscordUser>):Void
+	{
+		changePresence("In the Menus", null);
+	}
+
+	static function onDisconnected(errorCode:Int, message:cpp.ConstCharStar):Void {}
+
+	static function onError(errorCode:Int, message:cpp.ConstCharStar):Void {}
+
+	public static function changePresence(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float)
+	{
+		var startTimestamp:Float = hasStartTimestamp ? Date.now().getTime() : 0;
+		if (endTimestamp > 0)
+			endTimestamp = startTimestamp + endTimestamp;
+
+		presence.details = details;
+		presence.state = state;
+		presence.largeImageKey = 'icon';
+		presence.largeImageText = "Engine Version: " + MainMenuState.psychEngineVersion;
+		presence.smallImageKey = smallImageKey;
+		presence.startTimestamp = Std.int(startTimestamp / 1000);
+		presence.endTimestamp = Std.int(endTimestamp / 1000);
+		Discord.UpdatePresence(cpp.RawConstPointer.addressOf(presence));
+	}
+	#else
+	public static function initialize() {}
+
+	public static function shutdown() {}
+
+	public static function changePresence(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float) {}
+	#end
+
 	#if LUA_ALLOWED
-	public static function addLuaCallbacks(lua:State) {
-		Lua_helper.add_callback(lua, "changePresence", function(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float) {
+	public static function addLuaCallbacks(lua:State)
+	{
+		Lua_helper.add_callback(lua, "changePresence", function(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float)
+		{
 			changePresence(details, state, smallImageKey, hasStartTimestamp, endTimestamp);
 		});
 	}

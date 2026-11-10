@@ -40,6 +40,7 @@ class GameOverSubstate extends MusicBeatSubstate
 		PlayState.instance.callOnLuas('onGameOverStart', []);
 
 		super.create();
+		addBackButton();
 	}
 
 	public function new(x:Float, y:Float, camX:Float, camY:Float)

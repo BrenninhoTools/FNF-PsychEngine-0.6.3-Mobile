@@ -186,6 +186,7 @@ class StoryMenuState extends MusicBeatState
 		changeDifficulty();
 
 		super.create();
+		addBackButton();
 	}
 
 	override function closeSubState() {
@@ -206,6 +207,29 @@ class StoryMenuState extends MusicBeatState
 
 		if (!movedBack && !selectedWeek)
 		{
+			#if mobile
+			if (mobile.TouchUtil.justTappedOn(leftArrow, FlxG.camera))
+			{
+				changeDifficulty(-1);
+				mobile.TouchUtil.consume();
+			}
+			else if (mobile.TouchUtil.justTappedOn(rightArrow, FlxG.camera))
+			{
+				changeDifficulty(1);
+				mobile.TouchUtil.consume();
+			}
+			else
+			{
+				var tappedWeek:Int = mobile.TouchUtil.checkListTap(grpWeekText.members, curWeek);
+				if (tappedWeek > -1)
+				{
+					changeWeek(tappedWeek - curWeek);
+					changeDifficulty();
+					FlxG.sound.play(Paths.sound('scrollMenu'));
+				}
+			}
+			#end
+
 			var upP = controls.UI_UP_P;
 			var downP = controls.UI_DOWN_P;
 			if (upP)

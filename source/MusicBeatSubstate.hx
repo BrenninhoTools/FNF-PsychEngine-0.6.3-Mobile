@@ -5,6 +5,7 @@ import flixel.FlxG;
 import flixel.FlxSubState;
 import flixel.FlxBasic;
 import flixel.FlxSprite;
+import flixel.FlxCamera;
 
 class MusicBeatSubstate extends FlxSubState
 {
@@ -25,6 +26,42 @@ class MusicBeatSubstate extends FlxSubState
 
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
+
+	#if mobile
+	public var mobileCamera:FlxCamera;
+	public var backButton:mobile.MobileButton;
+	#end
+
+	public function addBackButton():Void
+	{
+		#if mobile
+		if (backButton != null)
+			return;
+
+		if (mobileCamera == null)
+		{
+			mobileCamera = new FlxCamera();
+			mobileCamera.bgColor = 0x00000000;
+			FlxG.cameras.add(mobileCamera, false);
+		}
+
+		backButton = new mobile.MobileButton(0, 0, 'backButton', 'back', 0.5);
+		backButton.setPosition(FlxG.width - backButton.width - 10, FlxG.height - backButton.height - 10);
+		backButton.isBackButton = true;
+		backButton.cameras = [mobileCamera];
+		add(backButton);
+		#end
+	}
+
+	override function destroy()
+	{
+		#if mobile
+		if (mobileCamera != null && FlxG.cameras.list.contains(mobileCamera))
+			FlxG.cameras.remove(mobileCamera);
+		mobileCamera = null;
+		#end
+		super.destroy();
+	}
 
 	override function update(elapsed:Float)
 	{

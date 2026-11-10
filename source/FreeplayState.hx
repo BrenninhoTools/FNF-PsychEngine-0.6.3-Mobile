@@ -4,7 +4,7 @@ package;
 import Discord.DiscordClient;
 #end
 import editors.ChartingState;
-import flash.text.TextField;
+import openfl.text.TextField;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.display.FlxGridOverlay;
@@ -15,7 +15,7 @@ import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import flixel.tweens.FlxTween;
 import lime.utils.Assets;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 import openfl.utils.Assets as OpenFlAssets;
 import WeekData;
 #if MODS_ALLOWED
@@ -198,6 +198,7 @@ class FreeplayState extends MusicBeatState
 		text.scrollFactor.set();
 		add(text);
 		super.create();
+		addBackButton();
 	}
 
 	override function closeSubState() {
@@ -261,6 +262,16 @@ class FreeplayState extends MusicBeatState
 
 		scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
 		positionHighscore();
+
+		#if mobile
+		var tappedSong:Int = mobile.TouchUtil.checkListTap(grpSongs.members, curSelected);
+		if (tappedSong > -1)
+		{
+			changeSelection(tappedSong - curSelected);
+			changeDiff();
+			holdTime = 0;
+		}
+		#end
 
 		var upP = controls.UI_UP_P;
 		var downP = controls.UI_DOWN_P;

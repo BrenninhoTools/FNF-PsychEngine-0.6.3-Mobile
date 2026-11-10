@@ -3,7 +3,7 @@ package options;
 #if desktop
 import Discord.DiscordClient;
 #end
-import flash.text.TextField;
+import openfl.text.TextField;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.display.FlxGridOverlay;
@@ -13,7 +13,7 @@ import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import lime.utils.Assets;
 import flixel.FlxSubState;
-import flash.text.TextField;
+import openfl.text.TextField;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.util.FlxSave;
@@ -87,6 +87,7 @@ class OptionsState extends MusicBeatState
 		ClientPrefs.saveSettings();
 
 		super.create();
+		addBackButton();
 	}
 
 	override function closeSubState() {
@@ -96,6 +97,12 @@ class OptionsState extends MusicBeatState
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
+
+		#if mobile
+		var tappedOption:Int = mobile.TouchUtil.checkListTap(grpOptions.members, curSelected);
+		if (tappedOption > -1)
+			changeSelection(tappedOption - curSelected);
+		#end
 
 		if (controls.UI_UP_P) {
 			changeSelection(-1);

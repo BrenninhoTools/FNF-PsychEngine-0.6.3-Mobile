@@ -19,6 +19,7 @@ class OutdatedState extends MusicBeatState
 	override function create()
 	{
 		super.create();
+		addBackButton();
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		add(bg);

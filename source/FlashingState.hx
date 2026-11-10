@@ -26,8 +26,9 @@ class FlashingState extends MusicBeatState
 		warnText = new FlxText(0, 0, FlxG.width,
 			"Hey, watch out!\n
 			This Mod contains some flashing lights!\n
-			Press ENTER to disable them now or go to Options Menu.\n
-			Press ESCAPE to ignore this message.\n
+			" + #if (mobile) "Tap to disable them now or go to Options Menu.\n
+			Swipe to ignore this message.\n" #else "Press ENTER to disable them now or go to Options Menu.\n
+			Press ESCAPE to ignore this message.\n" #end + "
 			You've been warned!",
 			32);
 		warnText.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER);
@@ -38,7 +39,7 @@ class FlashingState extends MusicBeatState
 	override function update(elapsed:Float)
 	{
 		if(!leftState) {
-			var back:Bool = controls.BACK;
+			var back:Bool = controls.BACK #if (mobile) || mobile.TouchUtil.anySwipe() #end;
 			if (controls.ACCEPT || back) {
 				leftState = true;
 				FlxTransitionableState.skipNextTransIn = true;

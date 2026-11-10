@@ -157,6 +157,14 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		super.create();
+		addBackButton();
+
+		#if mobile
+		editorButton = new mobile.MobileButton(0, 0, 'editorButton', null, 0.5);
+		editorButton.setPosition(10, FlxG.height - editorButton.height - 10);
+		editorButton.cameras = [mobileCamera];
+		add(editorButton);
+		#end
 	}
 
 	#if ACHIEVEMENTS_ALLOWED
@@ -169,6 +177,9 @@ class MainMenuState extends MusicBeatState
 	#end
 
 	var selectedSomethin:Bool = false;
+	#if mobile
+	var editorButton:mobile.MobileButton;
+	#end
 
 	override function update(elapsed:Float)
 	{
@@ -183,6 +194,15 @@ class MainMenuState extends MusicBeatState
 
 		if (!selectedSomethin)
 		{
+			#if mobile
+			var tappedItem:Int = mobile.TouchUtil.checkListTap(menuItems.members, curSelected);
+			if (tappedItem > -1)
+			{
+				FlxG.sound.play(Paths.sound('scrollMenu'));
+				changeItem(tappedItem - curSelected);
+			}
+			#end
+
 			if (controls.UI_UP_P)
 			{
 				FlxG.sound.play(Paths.sound('scrollMenu'));
@@ -257,6 +277,13 @@ class MainMenuState extends MusicBeatState
 			}
 			#if desktop
 			else if (FlxG.keys.anyJustPressed(debugKeys))
+			{
+				selectedSomethin = true;
+				MusicBeatState.switchState(new MasterEditorMenu());
+			}
+			#end
+			#if mobile
+			else if (editorButton != null && editorButton.justPressed())
 			{
 				selectedSomethin = true;
 				MusicBeatState.switchState(new MasterEditorMenu());

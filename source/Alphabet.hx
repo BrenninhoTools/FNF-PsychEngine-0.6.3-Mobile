@@ -7,8 +7,8 @@ import flixel.group.FlxSpriteGroup;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.util.FlxTimer;
-import flixel.system.FlxSound;
-import flash.media.Sound;
+import flixel.sound.FlxSound;
+import openfl.media.Sound;
 
 using StringTools;
 

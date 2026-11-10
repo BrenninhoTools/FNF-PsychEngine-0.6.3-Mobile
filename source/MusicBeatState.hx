@@ -29,6 +29,32 @@ class MusicBeatState extends FlxUIState
 
 	public static var camBeat:FlxCamera;
 
+	#if mobile
+	public var mobileCamera:FlxCamera;
+	public var backButton:mobile.MobileButton;
+	#end
+
+	public function addBackButton():Void
+	{
+		#if mobile
+		if (backButton != null)
+			return;
+
+		if (mobileCamera == null)
+		{
+			mobileCamera = new FlxCamera();
+			mobileCamera.bgColor = 0x00000000;
+			FlxG.cameras.add(mobileCamera, false);
+		}
+
+		backButton = new mobile.MobileButton(0, 0, 'backButton', 'back', 0.5);
+		backButton.setPosition(FlxG.width - backButton.width - 10, FlxG.height - backButton.height - 10);
+		backButton.isBackButton = true;
+		backButton.cameras = [mobileCamera];
+		add(backButton);
+		#end
+	}
+
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
 
