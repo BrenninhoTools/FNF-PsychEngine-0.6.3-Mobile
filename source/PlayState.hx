@@ -422,8 +422,7 @@ class PlayState extends MusicBeatState
 		pauseButton = new mobile.MobileButton(0, 0, 'pauseButton', 'pause', 0.8);
 		pauseButton.setPosition(FlxG.width - pauseButton.width - 10, 10);
 		pauseButton.cameras = [camControls];
-		if (ClientPrefs.invisiblePauseButton)
-			pauseButton.alpha = 0;
+		pauseButton.alpha = ClientPrefs.invisiblePauseButton ? 0 : 0.6;
 		add(pauseButton);
 		#end
 
