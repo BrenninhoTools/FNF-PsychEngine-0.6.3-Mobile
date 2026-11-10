@@ -8,7 +8,7 @@ class MobileOptionsSubState extends BaseOptionsMenu
 		rpcTitle = 'Mobile Options Menu';
 
 		var option:Option = new Option('Hitbox Mode',
-			'Four Lanes: the screen is split in four lanes.\nArrows: only the arrow buttons hit notes.',
+			'Four Lanes: the screen is split in four lanes.\nArrows: the strums go to the bottom, tap them to hit notes.',
 			'hitboxMode',
 			'string',
 			'Four Lanes',

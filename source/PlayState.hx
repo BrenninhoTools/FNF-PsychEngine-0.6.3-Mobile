@@ -217,6 +217,7 @@ class PlayState extends MusicBeatState
 	public var camGame:FlxCamera;
 	public var camOther:FlxCamera;
 	#if mobile
+	public var arrowsMode:Bool = false;
 	public var camControls:FlxCamera;
 	public var hitbox:mobile.Hitbox;
 	public var pauseButton:mobile.MobileButton;
@@ -334,6 +335,12 @@ class PlayState extends MusicBeatState
 	{
 		//trace('Playback Rate: ' + playbackRate);
 		Paths.clearStoredMemory();
+
+		#if mobile
+		arrowsMode = ClientPrefs.hitboxMode == 'Arrows';
+		if (arrowsMode)
+			ClientPrefs.overrideScroll(true, false, false);
+		#end
 
 		// for lua
 		instance = this;
@@ -2764,6 +2771,11 @@ class PlayState extends MusicBeatState
 
 			strumLineNotes.add(babyArrow);
 			babyArrow.postAddedToGroup();
+
+			#if mobile
+			if (arrowsMode && player == 1)
+				babyArrow.x = (FlxG.width / 4) * (i + 0.5) - babyArrow.width / 2;
+			#end
 		}
 	}
 
@@ -2927,6 +2939,10 @@ class PlayState extends MusicBeatState
 
 	override public function update(elapsed:Float)
 	{
+		#if mobile
+		if (arrowsMode)
+			updateArrowsHitbox();
+		#end
 		/*if (FlxG.keys.justPressed.NINE)
 		{
 			iconP1.swapOldIcon();
@@ -3403,6 +3419,31 @@ class PlayState extends MusicBeatState
 		DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
 		#end
 	}
+
+	#if mobile
+	function updateArrowsHitbox():Void
+	{
+		if (hitbox == null || playerStrums == null || playerStrums.length < 4)
+			return;
+
+		var centers:Array<Float> = [];
+		var tops:Array<Float> = [];
+		for (i in 0...4)
+		{
+			var strum:StrumNote = playerStrums.members[i];
+			centers.push(strum.x + strum.width / 2);
+			tops.push(strum.y);
+		}
+
+		for (i in 0...4)
+		{
+			var left:Float = i == 0 ? 0 : (centers[i - 1] + centers[i]) / 2;
+			var right:Float = i == 3 ? FlxG.width : (centers[i] + centers[i + 1]) / 2;
+			var top:Float = Math.max(0, Math.min(tops[i] - 90, FlxG.height - 160));
+			hitbox.setLaneBounds(i, left, top, right - left, FlxG.height - top);
+		}
+	}
+	#end
 
 	function openChartEditor()
 	{
@@ -5070,6 +5111,11 @@ class PlayState extends MusicBeatState
 	}
 
 	override function destroy() {
+		#if mobile
+		if (arrowsMode)
+			ClientPrefs.restoreScroll();
+		#end
+
 		for (lua in luaArray) {
 			lua.call('onDestroy', []);
 			lua.stop();

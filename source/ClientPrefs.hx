@@ -101,10 +101,29 @@ class ClientPrefs {
 		//trace(defaultKeys);
 	}
 
+	public static var scrollOverride:{downScroll:Bool, middleScroll:Bool, opponentStrums:Bool} = null;
+
+	public static function overrideScroll(downScroll:Bool, middleScroll:Bool, opponentStrums:Bool) {
+		if (scrollOverride == null)
+			scrollOverride = {downScroll: ClientPrefs.downScroll, middleScroll: ClientPrefs.middleScroll, opponentStrums: ClientPrefs.opponentStrums};
+		ClientPrefs.downScroll = downScroll;
+		ClientPrefs.middleScroll = middleScroll;
+		ClientPrefs.opponentStrums = opponentStrums;
+	}
+
+	public static function restoreScroll() {
+		if (scrollOverride == null)
+			return;
+		downScroll = scrollOverride.downScroll;
+		middleScroll = scrollOverride.middleScroll;
+		opponentStrums = scrollOverride.opponentStrums;
+		scrollOverride = null;
+	}
+
 	public static function saveSettings() {
-		FlxG.save.data.downScroll = downScroll;
-		FlxG.save.data.middleScroll = middleScroll;
-		FlxG.save.data.opponentStrums = opponentStrums;
+		FlxG.save.data.downScroll = scrollOverride != null ? scrollOverride.downScroll : downScroll;
+		FlxG.save.data.middleScroll = scrollOverride != null ? scrollOverride.middleScroll : middleScroll;
+		FlxG.save.data.opponentStrums = scrollOverride != null ? scrollOverride.opponentStrums : opponentStrums;
 		FlxG.save.data.showFPS = showFPS;
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;

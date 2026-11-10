@@ -60,19 +60,23 @@ class Hitbox extends FlxTypedSpriteGroup<HitboxHint>
 
 	function createArrows():Void
 	{
-		var arrows:Array<HitboxArrow> = [for (i in 0...4) new HitboxArrow(i)];
-		var size:Float = arrows[0].width;
-		var gap:Float = size * 0.12;
-		var margin:Float = 30;
-		var y:Float = FlxG.height - size - margin;
+		var laneWidth:Int = Std.int(FlxG.width / 4);
+		for (i in 0...4)
+		{
+			var zone:HitboxZone = new HitboxZone();
+			zone.setBounds(laneWidth * i, FlxG.height / 2, laneWidth, FlxG.height / 2);
+			add(zone);
+		}
+	}
 
-		arrows[0].setPosition(margin, y);
-		arrows[1].setPosition(margin + size + gap, y);
-		arrows[3].setPosition(FlxG.width - margin - size, y);
-		arrows[2].setPosition(arrows[3].x - size - gap, y);
+	public function setLaneBounds(index:Int, x:Float, y:Float, width:Float, height:Float):Void
+	{
+		if (index < 0 || index >= members.length)
+			return;
 
-		for (arrow in arrows)
-			add(arrow);
+		var zone:HitboxZone = Std.downcast(members[index], HitboxZone);
+		if (zone != null)
+			zone.setBounds(x, y, width, height);
 	}
 
 	override function update(elapsed:Float)
@@ -154,43 +158,26 @@ class HitboxLane extends HitboxHint
 	}
 }
 
-class HitboxArrow extends HitboxHint
+class HitboxZone extends HitboxHint
 {
-	static final directions:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
-
-	var baseWidth:Float;
-	var baseHeight:Float;
-
-	public function new(direction:Int)
+	public function new()
 	{
 		super();
-
-		idleAlpha = 0.75;
-		pressedAlpha = 1;
-
-		frames = Paths.getSparrowAtlas('NOTE_assets', 'shared');
-		var name:String = directions[direction];
-		animation.addByPrefix('static', 'arrow' + name, 24, false);
-		animation.addByPrefix('pressed', name.toLowerCase() + ' press', 24, false);
-
-		setGraphicSize(Std.int(frameWidth * 0.95));
-		updateHitbox();
-		baseWidth = width;
-		baseHeight = height;
-		antialiasing = ClientPrefs.globalAntialiasing;
+		makeGraphic(1, 1, FlxColor.TRANSPARENT);
+		idleAlpha = 0;
+		pressedAlpha = 0;
 		setPressed(false);
 	}
 
-	override public function setPressed(value:Bool):Void
+	public function setBounds(x:Float, y:Float, width:Float, height:Float):Void
 	{
-		super.setPressed(value);
-		if (animation == null || animation.getByName('static') == null)
-			return;
-
-		animation.play(value ? 'pressed' : 'static', true);
-		centerOffsets();
-		centerOrigin();
-		width = baseWidth;
-		height = baseHeight;
+		var w:Int = Std.int(Math.max(1, width));
+		var h:Int = Std.int(Math.max(1, height));
+		if (this.width != w || this.height != h)
+		{
+			setGraphicSize(w, h);
+			updateHitbox();
+		}
+		setPosition(x, y);
 	}
 }
