@@ -498,6 +498,9 @@ class TitleState extends MusicBeatState
 
 				FlxG.camera.flash(ClientPrefs.flashing ? FlxColor.WHITE : 0x4CFFFFFF, 1);
 				FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
+				#if mobile
+				mobile.Haptics.confirm();
+				#end
 
 				transitioning = true;
 				// FlxG.sound.music.stop();

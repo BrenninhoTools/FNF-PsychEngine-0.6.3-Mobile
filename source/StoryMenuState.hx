@@ -312,6 +312,9 @@ class StoryMenuState extends MusicBeatState
 			if (stopspamming == false)
 			{
 				FlxG.sound.play(Paths.sound('confirmMenu'));
+				#if mobile
+				mobile.Haptics.confirm();
+				#end
 
 				grpWeekText.members[curWeek].startFlashing();
 

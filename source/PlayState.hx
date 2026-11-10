@@ -4935,6 +4935,11 @@ class PlayState extends MusicBeatState
 		{
 			phillyTrain.x -= 400;
 
+			#if mobile
+			if (!trainFinishing || phillyTrain.x > -2000)
+				mobile.Haptics.rumble();
+			#end
+
 			if (phillyTrain.x < -2000 && !trainFinishing)
 			{
 				phillyTrain.x = -1150;

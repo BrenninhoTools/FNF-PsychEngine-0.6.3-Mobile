@@ -85,7 +85,7 @@ class MobileButton extends FlxSprite
 	{
 		for (button in activeButtons)
 		{
-			if (button != null && button.exists && button.visible && button.alive && touch.overlaps(button, button.getButtonCamera()))
+			if (button != null && button.exists && button.visible && button.alive && TouchUtil.overlaps(touch, button, button.getButtonCamera(), TouchUtil.mmToGame(TouchUtil.tapMarginMM)))
 				return true;
 		}
 		return false;

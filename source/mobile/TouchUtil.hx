@@ -26,6 +26,7 @@ class TouchUtil
 	public static var flingMaxSteps:Int = 6;
 	public static var flingStepDelay:Float = 0.05;
 	public static var swipeRatio:Float = 1.5;
+	public static var tapMarginMM:Float = 1.5;
 
 	public static var tapDistance(get, never):Float;
 	public static var swipeDistance(get, never):Float;
@@ -106,7 +107,7 @@ class TouchUtil
 		#if FLX_TOUCH
 		for (touch in FlxG.touches.list)
 		{
-			if (isTouchTap(touch) && touch.overlaps(object, camera))
+			if (isTouchTap(touch) && overlaps(touch, object, camera, mmToGame(tapMarginMM)))
 				return true;
 		}
 		#end
@@ -159,7 +160,7 @@ class TouchUtil
 		#if FLX_TOUCH
 		for (touch in FlxG.touches.list)
 		{
-			if (touch.pressed && touch.overlaps(object, camera) && (!ignoreButtons || !MobileButton.isOverAny(touch)))
+			if (touch.pressed && overlaps(touch, object, camera) && (!ignoreButtons || !MobileButton.isOverAny(touch)))
 				return true;
 		}
 		#end
@@ -339,6 +340,43 @@ class TouchUtil
 	}
 
 	#if FLX_TOUCH
+	public static function overlaps(touch:FlxTouch, basic:FlxBasic, ?camera:FlxCamera, margin:Float = 0):Bool
+	{
+		if (touch == null || basic == null || !basic.exists || !basic.visible)
+			return false;
+
+		if (camera == null)
+			camera = FlxG.camera;
+		if (camera == null || camera.scroll == null)
+			return false;
+
+		var group = @:privateAccess flixel.group.FlxGroup.FlxTypedGroup.resolveGroup(basic);
+		if (group != null)
+		{
+			if (group.members == null)
+				return false;
+			for (member in group.members)
+			{
+				if (overlaps(touch, member, camera, margin))
+					return true;
+			}
+			return false;
+		}
+
+		var object:flixel.FlxObject = Std.downcast(basic, flixel.FlxObject);
+		if (object == null || object.scrollFactor == null)
+			return false;
+
+		var world:flixel.math.FlxPoint = touch.getWorldPosition(camera);
+		var screen:flixel.math.FlxPoint = object.getScreenPosition(null, camera);
+		var px:Float = world.x - camera.scroll.x;
+		var py:Float = world.y - camera.scroll.y;
+		var result:Bool = px >= screen.x - margin && px < screen.x + object.width + margin && py >= screen.y - margin && py < screen.y + object.height + margin;
+		world.put();
+		screen.put();
+		return result;
+	}
+
 	static function isTouchTap(touch:FlxTouch):Bool
 	{
 		if (!touch.justReleased || draggedTouches.exists(touch.touchPointID))
