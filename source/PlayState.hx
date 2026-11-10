@@ -218,6 +218,8 @@ class PlayState extends MusicBeatState
 	public var camOther:FlxCamera;
 	#if mobile
 	public var arrowsMode:Bool = false;
+	public static var arrowsScale:Float = 1.15;
+	public static var arrowsSpacing:Float = 0.78;
 	public var camControls:FlxCamera;
 	public var hitbox:mobile.Hitbox;
 	public var pauseButton:mobile.MobileButton;
@@ -1659,7 +1661,7 @@ class PlayState extends MusicBeatState
 			startAndEnd();
 		}, true);
 		FlxG.addChildBelowMouse(video);
-		if (video.load(filepath))
+		if (video.load(Paths.absolutePath(filepath)))
 			new FlxTimer().start(0.001, function(_) video.play());
 		else
 		{
@@ -2774,7 +2776,15 @@ class PlayState extends MusicBeatState
 
 			#if mobile
 			if (arrowsMode && player == 1)
-				babyArrow.x = (FlxG.width / 4) * (i + 0.5) - babyArrow.width / 2;
+			{
+				babyArrow.scale.x *= arrowsScale;
+				babyArrow.scale.y *= arrowsScale;
+				babyArrow.updateHitbox();
+				babyArrow.playAnim('static', true);
+				var step:Float = (FlxG.width / 4) * arrowsSpacing;
+				babyArrow.x = FlxG.width / 2 + (i - 1.5) * step - babyArrow.width / 2;
+				babyArrow.y = FlxG.height - babyArrow.height - 30;
+			}
 			#end
 		}
 	}
@@ -3225,6 +3235,16 @@ class PlayState extends MusicBeatState
 			while (unspawnNotes.length > 0 && unspawnNotes[0].strumTime - Conductor.songPosition < time)
 			{
 				var dunceNote:Note = unspawnNotes[0];
+				#if mobile
+				if (arrowsMode && dunceNote.mustPress)
+				{
+					dunceNote.scale.x *= arrowsScale;
+					if (!dunceNote.isSustainNote)
+						dunceNote.scale.y *= arrowsScale;
+					dunceNote.updateHitbox();
+					dunceNote.offsetX *= arrowsScale;
+				}
+				#end
 				notes.insert(0, dunceNote);
 				dunceNote.spawned=true;
 				callOnLuas('onSpawnNote', [notes.members.indexOf(dunceNote), dunceNote.noteData, dunceNote.noteType, dunceNote.isSustainNote]);

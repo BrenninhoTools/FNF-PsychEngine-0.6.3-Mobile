@@ -338,7 +338,7 @@ class Paths
 		var modKey:String = modsImages(key);
 		if(FileSystem.exists(modKey)) {
 			if(!currentTrackedAssets.exists(modKey)) {
-				var newBitmap:BitmapData = BitmapData.fromFile(modKey);
+				var newBitmap:BitmapData = BitmapData.fromFile(absolutePath(modKey));
 				var newGraphic:FlxGraphic = FlxGraphic.fromBitmapData(newBitmap, false, modKey);
 				newGraphic.persist = true;
 				currentTrackedAssets.set(modKey, newGraphic);
@@ -363,13 +363,26 @@ class Paths
 		return null;
 	}
 
+	public static function absolutePath(path:String):String
+	{
+		#if (mobile && sys)
+		if (path == null || path.length == 0 || path.startsWith('/'))
+			return path;
+		if (path.startsWith('./'))
+			path = path.substr(2);
+		return haxe.io.Path.addTrailingSlash(Sys.getCwd()) + path;
+		#else
+		return path;
+		#end
+	}
+
 	public static var currentTrackedSounds:Map<String, Sound> = [];
 	public static function returnSound(path:String, key:String, ?library:String) {
 		#if MODS_ALLOWED
 		var file:String = modsSounds(path, key);
 		if(FileSystem.exists(file)) {
 			if(!currentTrackedSounds.exists(file)) {
-				currentTrackedSounds.set(file, Sound.fromFile(file));
+				currentTrackedSounds.set(file, Sound.fromFile(absolutePath(file)));
 			}
 			localTrackedAssets.push(key);
 			return currentTrackedSounds.get(file);
@@ -383,7 +396,7 @@ class Paths
 		{
 			#if MODS_ALLOWED
 			if (FileSystem.exists('./' + gottenPath))
-				currentTrackedSounds.set(gottenPath, Sound.fromFile('./' + gottenPath));
+				currentTrackedSounds.set(gottenPath, Sound.fromFile(absolutePath(gottenPath)));
 			else
 			#end
 			{
