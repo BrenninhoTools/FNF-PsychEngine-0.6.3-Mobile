@@ -151,11 +151,11 @@ jobs:
           cd export/release/ios/build/Release-iphoneos
           mkdir -p Payload
           cp -R *.app Payload/
-          zip -qr PsychEngine.ipa Payload
+          zip -qr PsychEngine063.ipa Payload
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: iOSBuild
-          path: export/release/ios/build/Release-iphoneos/PsychEngine.ipa
+          path: export/release/ios/build/Release-iphoneos/PsychEngine063.ipa
           if-no-files-found: error
