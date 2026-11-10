@@ -71,7 +71,23 @@ class Haptics
 	static var trainLastClack:Float = 0;
 	static var trainClackCount:Int = 0;
 
+	static var sustainActiveUntil:Float = 0;
+	static var sustainStart:Float = 0;
+	static var sustainLastPulse:Float = 0;
+	static var sustainLastTug:Float = 0;
+
 	public static var enabled(get, never):Bool;
+
+	public static var allEnabled(get, never):Bool;
+
+	static function get_allEnabled():Bool
+	{
+		#if mobile
+		return enabled && ClientPrefs.hapticsType != 'Notes';
+		#else
+		return false;
+		#end
+	}
 
 	static function get_enabled():Bool
 	{
@@ -105,7 +121,7 @@ class Haptics
 
 	public static function menu():Void
 	{
-		if (lastTick == FlxG.game.ticks)
+		if (!allEnabled || lastTick == FlxG.game.ticks)
 			return;
 		lastTick = FlxG.game.ticks;
 		pulse('menu', 10, 0.45, LIGHT, 0.035);
@@ -113,6 +129,8 @@ class Haptics
 
 	public static function confirm():Void
 	{
+		if (!allEnabled)
+			return;
 		lastTick = FlxG.game.ticks;
 		if (pulse('confirm', 45, 1, HEAVY, 0.1))
 			startEffect('confirm', 0.35, 0.09, HEAVY, function(t:Float) return t < 0.3 ? 0 : 1 - t);
@@ -125,11 +143,39 @@ class Haptics
 
 	public static function sustain():Void
 	{
-		pulse('sustain', 8, 0.3, LIGHT, 0.06);
+		if (!enabled)
+			return;
+		init();
+
+		var now:Float = Timer.stamp();
+		if (now > sustainActiveUntil)
+		{
+			sustainStart = now;
+			sustainLastPulse = 0;
+			sustainLastTug = now;
+		}
+		sustainActiveUntil = now + 0.2;
+	}
+
+	public static function thunder():Void
+	{
+		if (!allEnabled)
+			return;
+		lastTimes.remove('thunder');
+		pulse('thunder', 120, 1, HEAVY, 0.1);
+		startEffect('thunder', 1.6, 0.05, HEAVY, function(t:Float)
+		{
+			if (t < 0.08)
+				return 0;
+			var flicker:Float = 0.75 + 0.25 * Math.sin(t * 60);
+			return Math.max(0, (1 - t) * flicker);
+		});
 	}
 
 	public static function carPass():Void
 	{
+		if (!allEnabled)
+			return;
 		startEffect('car', 1.5, 0.045, HEAVY, function(t:Float)
 		{
 			if (t < 0.2)
@@ -142,6 +188,8 @@ class Haptics
 
 	public static function trainPassing():Void
 	{
+		if (!allEnabled)
+			return;
 		trainActiveUntil = Timer.stamp() + 0.15;
 	}
 
@@ -150,6 +198,7 @@ class Haptics
 		effects = [];
 		trainActiveUntil = 0;
 		trainClackCount = 0;
+		sustainActiveUntil = 0;
 	}
 
 	public static function startEffect(id:String, duration:Float, interval:Float, style:HapticStyle, curve:Float->Float):Void
@@ -218,6 +267,33 @@ class Haptics
 		}
 
 		updateTrain();
+		updateSustain();
+	}
+
+	static function updateSustain():Void
+	{
+		var now:Float = Timer.stamp();
+		if (now > sustainActiveUntil)
+			return;
+
+		var held:Float = now - sustainStart;
+		var tension:Float = Math.min(1, 0.7 + held * 0.4);
+
+		if (now - sustainLastTug >= 0.22)
+		{
+			sustainLastTug = now;
+			sustainLastPulse = now;
+			#if android
+			vibrate(0, Math.round(Math.min(maxDuration, 90 * Math.max(0.6, Math.min(2.5, intensity)))));
+			#elseif ios
+			impact(HEAVY, Math.min(1, tension * intensity * 0.65));
+			#end
+		}
+		else if (now - sustainLastPulse >= 0.05)
+		{
+			sustainLastPulse = now;
+			continuous(0.05, tension, MEDIUM);
+		}
 	}
 
 	static function updateTrain():Void

@@ -38,6 +38,8 @@ class ClientPrefs {
 	public static var chartEditorInPause:Bool = false;
 	public static var storageType:String = 'Data';
 	public static var haptics:Bool = true;
+	public static var hapticsType:String = 'All';
+	public static var hitboxMode:String = 'Four Lanes';
 	public static var hapticsIntensity:Float = 1;
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
@@ -140,6 +142,8 @@ class ClientPrefs {
 		FlxG.save.data.invisiblePauseButton = invisiblePauseButton;
 		FlxG.save.data.chartEditorInPause = chartEditorInPause;
 		FlxG.save.data.haptics = haptics;
+		FlxG.save.data.hapticsType = hapticsType;
+		FlxG.save.data.hitboxMode = hitboxMode;
 		FlxG.save.data.hapticsIntensity = hapticsIntensity;
 	
 		FlxG.save.flush();
@@ -163,6 +167,12 @@ class ClientPrefs {
 		}
 		if(FlxG.save.data.haptics != null) {
 			haptics = FlxG.save.data.haptics;
+		}
+		if(FlxG.save.data.hapticsType != null) {
+			hapticsType = FlxG.save.data.hapticsType;
+		}
+		if(FlxG.save.data.hitboxMode != null) {
+			hitboxMode = FlxG.save.data.hitboxMode;
 		}
 		if(FlxG.save.data.hapticsIntensity != null) {
 			hapticsIntensity = FlxG.save.data.hapticsIntensity;

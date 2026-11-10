@@ -7,6 +7,14 @@ class MobileOptionsSubState extends BaseOptionsMenu
 		title = 'Mobile Options';
 		rpcTitle = 'Mobile Options Menu';
 
+		var option:Option = new Option('Hitbox Mode',
+			'Four Lanes: the screen is split in four lanes.\nArrows: only the arrow buttons hit notes.',
+			'hitboxMode',
+			'string',
+			'Four Lanes',
+			mobile.Hitbox.modes);
+		addOption(option);
+
 		var option:Option = new Option('Invisible Hitbox',
 			'If checked, the hitbox will be invisible\nbut it will still work.',
 			'invisibleHitbox',
@@ -33,6 +41,15 @@ class MobileOptionsSubState extends BaseOptionsMenu
 			'haptics',
 			'bool',
 			true);
+		option.onChange = onChangeHaptics;
+		addOption(option);
+
+		var option:Option = new Option('Haptics Type',
+			'All: vibrates for everything.\nNotes: vibrates only for notes and sustains.',
+			'hapticsType',
+			'string',
+			'All',
+			['All', 'Notes']);
 		option.onChange = onChangeHaptics;
 		addOption(option);
 

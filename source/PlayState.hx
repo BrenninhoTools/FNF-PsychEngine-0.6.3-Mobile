@@ -1316,6 +1316,12 @@ class PlayState extends MusicBeatState
 						}
 					});
 					FlxG.sound.play(Paths.soundRandom('thunder_', 1, 2));
+		#if mobile
+		mobile.Haptics.thunder();
+		#end
+					#if mobile
+					mobile.Haptics.thunder();
+					#end
 					if(gf != null) gf.playAnim('scared', true);
 					boyfriend.playAnim('scared', true);
 
